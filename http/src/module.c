@@ -31,7 +31,7 @@ void module_term(module_t * this)
 
     dlclose(this->handle);
     this->handle = NULL;
-    this->name = NULL;
+    SAFE_FREE(this->name);
     this->init = NULL;
     this->term = NULL;
 }
@@ -49,7 +49,8 @@ bool module_load(module_t * this, const char * filename)
         goto error_open;
     }
 
-    this->name = dlsym(handle, "CRIUS_MODULE_NAME");
+    module_name_func name = dlsym(handle, "crius_module_name");
+    this->name = strndup(name(), MAX_BUFFER_LEN);
     this->init = dlsym(handle, "crius_module_init");
     this->term = dlsym(handle, "crius_module_term");
 

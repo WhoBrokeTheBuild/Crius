@@ -3,6 +3,7 @@
 
 #include "common.h"
 
+typedef const char *(*module_name_func)();
 typedef void(*module_init_func)();
 typedef void(*module_term_func)();
 

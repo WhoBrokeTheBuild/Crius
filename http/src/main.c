@@ -50,6 +50,7 @@ int main(int argc, char** argv)
             LOG_ERROR("Failed to load module %s", conf->modules[i]);
             goto error_module;
         }
+        printf("%s\n", modules[i].name);
     }
 
     if (SIG_ERR == signal(SIGINT, handle_signal))
@@ -58,7 +59,19 @@ int main(int argc, char** argv)
         goto error_signal;
     }
 
+    for (int i = 0; i < conf->modules_len; ++i)
+    {
+        if (modules[i].init)
+            modules[i].init();
+    }
+
     server_start(conf);
+    
+    for (int i = 0; i < conf->modules_len; ++i)
+    {
+        if (modules[i].term)
+            modules[i].term();
+    }
 
 error_signal:
 
