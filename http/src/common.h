@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <assert.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "defines.h"
 #include "util.h"

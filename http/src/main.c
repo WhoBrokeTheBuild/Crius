@@ -1,6 +1,17 @@
 #include <stdio.h>
 
+#include <signal.h>
 #include "config.h"
+#include "module.h"
+#include "server.h"
+
+void handle_signal(int signo)
+{
+    if (signo == SIGINT)
+    {
+        server_stop();
+    }
+}
 
 int main(int argc, char** argv)
 {
@@ -8,9 +19,7 @@ int main(int argc, char** argv)
 
     LOG_INFO("Starting Crius HTTP Server");
 
-    config_t * conf = NULL;
-    conf = config_create();
-
+    config_t * conf = config_create(NULL);
     if (NULL == conf)
     {
         LOG_ERROR(EMSG_OUT_OF_MEM);
@@ -24,12 +33,37 @@ int main(int argc, char** argv)
         goto error_config_load;
     }
 
-    LOG_INFO("Listening on Port %lu", conf->port);
-    
+    module_t * modules = (module_t *)malloc(sizeof(module_t) * conf->modules_len);
+    if (NULL == modules)
+    {
+        LOG_ERROR(EMSG_OUT_OF_MEM);
+        goto error_module;
+    }
+
     for (int i = 0; i < conf->modules_len; ++i) 
     {
         LOG_INFO("Loading module %s", conf->modules[i]);
+
+        module_init(&modules[i]);
+        if (!module_load(&modules[i], conf->modules[i]))
+        {
+            LOG_ERROR("Failed to load module %s", conf->modules[i]);
+            goto error_module;
+        }
     }
+
+    if (SIG_ERR == signal(SIGINT, handle_signal))
+    {
+        LOG_ERROR("Failed to register signal handler");
+        goto error_signal;
+    }
+
+    server_start(conf);
+
+error_signal:
+
+error_module:
+    SAFE_FREE(modules);
 
 error_config_load:
     config_destroy(conf);

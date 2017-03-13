@@ -7,25 +7,37 @@
 config_t * config_create()
 {
     config_t * this = (config_t *)malloc(sizeof(config_t));
-    if (NULL != this)
-    {
-        this->port = 80;
-        this->modules = NULL;
-        this->modules_len = 0;
-    }
+    config_init(this);
     return this;
 }
 
 void config_destroy(config_t * this)
 {
+    config_term(this);
+    free(this);
+}
+
+void config_init(config_t * this)
+{
     if (NULL == this) return;
 
-    for (int i = 0; i < this->modules_len; ++i)
+    memset(this, 0, sizeof(config_t));
+    this->port = 80;
+    this->modules = NULL;
+    this->modules_len = 0;
+    this->worker_count = 1;
+}
+
+void config_term(config_t * this)
+{
+    if (NULL == this) return;
+
+    int i;
+    for (i = 0; i < this->modules_len; ++i)
     {
         free(this->modules[i]);
     }
-    free(this->modules);
-    this->modules = NULL;
+    SAFE_FREE(this->modules);
 }
 
 bool config_load_file(config_t * this, const char * filename)
@@ -34,23 +46,24 @@ bool config_load_file(config_t * this, const char * filename)
     assert(NULL != filename);
 
     bool loaded = false;
+    FILE * fp = NULL;
+    unsigned int line_num = 0;
+    char line[MAX_BUFFER_LEN];
+    char * ptr = NULL;
+    size_t len;
 
     LOG_INFO("Loading config file %s", filename);
 
-    FILE * fp = NULL;
     fp = fopen(filename, "rt");
-
     if (NULL == fp)
     {
         LOG_ERROR(EMSG_OPEN_FILE, filename);
         goto error_file_open;
     }
 
-    unsigned int line_num = 0;
-    char line[MAX_BUFFER_LEN];
     while (NULL != fgets(line, sizeof(line), fp)) 
     {
-        char * ptr = line;
+        ptr = line;
         ++line_num;
 
         // Remove Leading Whitespace
@@ -58,7 +71,7 @@ bool config_load_file(config_t * this, const char * filename)
             ++ptr;
         
         // Remove Trailing Whitespace
-        size_t len = strlen(ptr);
+        len = strlen(ptr);
         while (isspace(ptr[len - 1])) 
         {
             ptr[len - 1] = '\0';
@@ -76,6 +89,28 @@ bool config_load_file(config_t * this, const char * filename)
                 LOG_ERROR(EMSG_PARSE, "Port");
                 goto error_parse;
             }
+        }
+        else if (0 == CONSTRNCMP(ptr, "WorkerCount"))
+        {
+            if (1 != sscanf(ptr, "%*s %u", &(this->worker_count)))
+            {
+                LOG_ERROR(EMSG_PARSE, "WorkerCount");
+                goto error_parse;
+            }
+        }
+        else if (0 == CONSTRNCMP(ptr, "Include"))
+        {
+            ptr += sizeof("Include") - 1;
+            while (isspace(*ptr)) 
+                ++ptr;
+
+            if (*ptr == '\0') 
+            {
+                LOG_ERROR(EMSG_PARSE, "Include");
+                goto error_parse;
+            }
+
+            config_load_file(this, ptr);
         }
         else if (0 == CONSTRNCMP(ptr, "LoadModule"))
         {

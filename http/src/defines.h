@@ -6,6 +6,11 @@
 
 #define MAX_BUFFER_LEN 1024
 
+#define MAX_CONN_BACKLOG 20
+
+/* Error Messages
+ */
+
 #define EMSG_OPEN_FILE          "Cannot open file %s"
 #define EMSG_OUT_OF_MEM         "Out of memory"
 #define EMSG_CONF_LOAD_FAIL     "Failed to load config"

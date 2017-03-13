@@ -14,7 +14,7 @@ DEP_DIR = .dep
 
 CFLAGS  += -g -Wall -std=c11 -I$(SRC_DIR) -D_XOPEN_SOURCE=700
 LDFLAGS += 
-LDLIBS  += -ldl
+LDLIBS  += -ldl -lpthread
 
 # Dynamically get the sources/objects/tests
 
@@ -31,7 +31,7 @@ $(shell mkdir -p $(patsubst $(SRC_DIR)%,$(OBJ_DIR)%,$(dir $(SOURCES))))
 
 # Build the main target
 
-all: $(TARGET)
+all: $(TARGET) 
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c $(DEP_DIR)/%.d
