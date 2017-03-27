@@ -22,7 +22,7 @@ LDLIBS  += -ldl -lpthread
 SOURCES = $(wildcard $(SRC_DIR)/**/*.c $(SRC_DIR)/*.c)
 OBJECTS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 TESTS   = $(patsubst %.c,%,$(wildcard $(TESTS_DIR)/*_test.c))
-TARGET  = $(BUILD_DIR)/crius_ftp
+TARGET  = $(BUILD_DIR)/cftp
 
 # Create directories to prevent "cannot create file" errors
 
