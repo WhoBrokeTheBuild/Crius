@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
 int cftp_stricmp(char *s1, char *s2);
 int cftp_strnicmp(char *s1, char *s2, size_t n);
 
@@ -29,15 +31,18 @@ static inline char * skip_word(char * ptr)
 #if !defined(NDEBUG)
 
 #define LOG_INFO(MSG, ...) \
-    do { printf("INF[%s:%d] " MSG "\n", __FILE__, __LINE__, ##__VA_ARGS__); } while(0)
+    do { printf("INF[%s:%d] " MSG "\n", __FILENAME__, __LINE__, ##__VA_ARGS__); } while(0)
 
 #define LOG_ERROR(MSG, ...) \
-    do { fprintf(stderr, "ERR[%s:%d] " MSG "\n", __FILE__, __LINE__, ##__VA_ARGS__); } while(0)
+    do { fprintf(stderr, "ERR[%s:%d] " MSG "\n", __FILENAME__, __LINE__, ##__VA_ARGS__); } while(0)
 
 #else 
 
-#define LOG_INFO(MSG, ...) do { } while(0)
-#define LOG_ERROR(MSG, ...) do { } while(0)
+#define LOG_INFO(MSG, ...) \
+    do { printf("INF: " MSG "\n", ##__VA_ARGS__); } while(0)
+
+#define LOG_ERROR(MSG, ...) \
+    do { fprintf(stderr, "ERR: " MSG "\n", ##__VA_ARGS__); } while(0)
 
 #endif 
 
